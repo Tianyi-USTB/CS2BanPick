@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2地图Ban/Pick - 队伍1</title>
+  <link rel="stylesheet" href="/css/team.css">
+</head>
+<body>
+  <div class="team-view">
+    <h1 id="teamName">队伍1</h1>
+    <div class="status-info">
+      <div id="currentTurn" class="current-turn">轮到: <span></span></div>
+      <div id="currentAction" class="current-action">操作: <span></span></div>
+    </div>
+    
+    <div class="maps-selection">
+      <h2>可选地图</h2>
+      <div id="availableMaps" class="maps-grid"></div>
+    </div>
+    
+    <div class="match-status">
+      <div class="banned-maps">
+        <h3>已禁用地图</h3>
+        <div id="bannedMaps" class="maps-list"></div>
+      </div>
+      
+      <div class="picked-maps">
+        <h3>已选择地图</h3>
+        <div id="pickedMaps" class="maps-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/team.js"></script>
+</body>
+</html>

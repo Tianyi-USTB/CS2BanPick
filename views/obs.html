@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2地图Ban/Pick - OBS浏览器源</title>
+  <link rel="stylesheet" href="/css/obs.css">
+</head>
+<body>
+  <div class="obs-view">
+    <div id="mapContainer" class="map-container">
+      <!-- 地图槽位将通过JavaScript动态添加 -->
+    </div>
+    <div id="notification" class="notification"></div>
+    
+    <!-- 图片预加载区（不可见） -->
+    <div id="preloadArea" style="position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none;">
+        
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/obs.js"></script>
+</body>
+</html>

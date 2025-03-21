@@ -1,0 +1,494 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  font-family: 'Arial', sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.obs-view {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 50px;
+}
+
+.map-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: flex-end;
+  padding: 0;
+  position: relative;
+  height: 70vh;
+}
+
+/* 添加每个地图位置的固定容器 */
+.map-slot {
+  width: calc(100% / 7);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.team-headers {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+}
+
+.team1 {
+  color: #fa4454;
+  text-align: left;
+}
+
+.team2 {
+  color: #00d8ff;
+  text-align: right;
+  flex-direction: row-reverse;
+}
+
+.team-logo {
+  width: 30px;
+  height: 30px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.match-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vs {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 15px;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.match-format {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffd700;
+  margin-top: 5px;
+}
+
+.map-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.phase {
+  margin-bottom: 10px;
+}
+
+.phase h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 10px 0;
+  padding-left: 10px;
+  border-left: 3px solid;
+  color: #ffffff;
+}
+
+.firstBan h3 {
+  border-color: #fa4454;
+}
+
+.pick h3 {
+  border-color: #00d8ff;
+}
+
+.secondBan h3 {
+  border-color: #fa4454;
+}
+
+.decider h3 {
+  border-color: #ffd700;
+}
+
+.maps-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.maps-single {
+  display: flex;
+  justify-content: center;
+}
+
+.map-item {
+  position: relative;
+  width: 90%;
+  margin: 0 auto;
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(192, 192, 192, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(192, 192, 192, 0.5);
+  transform: translateY(100%);
+  opacity: 0;
+  margin-bottom: 15px;
+}
+
+/* 修改样式确保ban操作的地图边框是红色，pick操作的地图边框是蓝色 */
+.map-item.ban {
+  border-color: rgba(250, 68, 84, 0.7); /* 红色边框 */
+}
+
+.map-item.pick {
+  border-color: rgba(0, 216, 255, 0.7); /* 蓝色边框 */
+}
+
+.map-item.decider {
+  border-color: rgba(255, 215, 0, 0.7); /* 黄色边框 */
+}
+
+/* 移除之前基于队伍的边框颜色定义 (如果冲突) */
+.map-item.team1 {
+  /* 保留队伍标识但不影响边框颜色 */
+}
+
+.map-item.team2 {
+  /* 保留队伍标识但不影响边框颜色 */
+}
+
+.map-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.map-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.map-info {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.map-name {
+  flex: 1;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.team-indicator {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #c0c0c0; /* 银色字体 */
+  display: flex;
+  align-items: center;
+}
+
+.team-logo-img {
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  object-fit: contain;
+}
+
+/* 队伍指示器保持不同颜色的背景或边框，但字体统一为银色 */
+.team-indicator.team1 {
+  border-left: 3px solid #fa4454;
+}
+
+.team-indicator.team2 {
+  border-left: 3px solid #00d8ff;
+}
+
+.notification {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 25px;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.notification.ban {
+  border-left: 4px solid #fa4454;
+}
+
+.notification.pick {
+  border-left: 4px solid #00d8ff;
+}
+
+/* 修改动画效果为从下至上 */
+.map-item.animated {
+  animation: slideUp 1s forwards cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.map-action {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.map-action.ban {
+  color: #fa4454;
+}
+
+.map-action.pick {
+  color: #00d8ff;
+}
+
+.map-action.decider {
+  color: #ffd700;
+}
+
+.map-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(40, 40, 40, 0.9), rgba(40, 40, 40, 0.7));
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  z-index: 2;
+  justify-content: space-between;
+  padding: 5px;
+  height: auto;
+}
+
+.map-header .map-name {
+  flex: 1;
+  font-size: 14px;
+  margin: 0 10px;
+  text-align: center;
+}
+
+.map-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.empty-placeholder {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
+
+/* 阵营显示样式 */
+.team1-side, .team2-side {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.team1-side img, .team2-side img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin: 0 5px;
+}
+
+.team1-side {
+  flex-direction: row;
+}
+
+.team2-side {
+  flex-direction: row-reverse;
+}
+
+.t {
+  background-color: rgba(200, 126, 20, 0.7);  /* T方棕黄色 */
+  color: white;
+}
+
+.ct {
+  background-color: rgba(93, 121, 174, 0.7);  /* CT方蓝色 */
+  color: white;
+}
+
+/* 阵营显示样式 - 调整为只显示Logo并铺满颜色背景 */
+.team1-side, .team2-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  padding: 0;
+  margin: 0 5px;
+}
+
+.team1-side img, .team2-side img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  margin: 0;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+.logo-placeholder {
+  width: 30px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}
+
+.t {
+  background-color: rgba(200, 126, 20, 0.9);  /* T方棕黄色，提高不透明度 */
+}
+
+.ct {
+  background-color: rgba(93, 121, 174, 0.9);  /* CT方蓝色，提高不透明度 */
+}
+
+/* 调整地图头部样式 */
+.map-header {
+  justify-content: space-between;
+  padding: 5px;
+  height: auto;
+}
+
+.map-header .map-name {
+  flex: 1;
+  font-size: 14px;
+  margin: 0 10px;
+  text-align: center;
+}
+
+/* 添加占位符样式，保持布局一致 */
+.placeholder-block {
+  width: 40px;
+  height: 40px;
+  visibility: hidden; /* 不可见但占据空间 */
+}
+
+/* 确保所有地图头部高度一致 */
+.map-header {
+  height: 40px; /* 固定高度 */
+  min-height: 40px;
+  justify-content: space-between;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+/* 确保所有类型地图的头部显示一致 */
+.map-item.ban .map-header,
+.map-item.pick .map-header,
+.map-item.decider .map-header {
+  display: flex;
+  align-items: center;
+}
+
+/* 阵营显示样式 - 调整为只显示Logo并铺满颜色背景 - 减小尺寸 */
+.team1-side, .team2-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px; /* 减小宽度 */
+  height: 30px; /* 减小高度 */
+  border-radius: 3px; /* 适当减小圆角 */
+  padding: 0;
+  margin: 0 5px;
+}
+
+.team1-side img, .team2-side img {
+  width: 22px; /* 减小图片宽度 */
+  height: 22px; /* 减小图片高度 */
+  object-fit: contain;
+  margin: 0;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+.logo-placeholder {
+  width: 22px; /* 匹配上面的图片尺寸 */
+  height: 22px; /* 匹配上面的图片尺寸 */
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}
+
+/* 添加占位符样式，保持布局一致 - 调整尺寸 */
+.placeholder-block {
+  width: 30px; /* 匹配上面的team-side宽度 */
+  height: 30px; /* 匹配上面的team-side高度 */
+  visibility: hidden; /* 不可见但占据空间 */
+}
+
+/* 确保所有地图头部高度一致 - 相应调整 */
+.map-header {
+  height: 36px; /* 适当调整头部高度 */
+  min-height: 36px;
+  justify-content: space-between;
+  padding: 3px 5px; /* 调整填充 */
+  box-sizing: border-box;
+}

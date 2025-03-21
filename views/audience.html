@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2地图Ban/Pick - 观众视图</title>
+  <link rel="stylesheet" href="/css/audience.css">
+</head>
+<body>
+  <div class="audience-view">
+    <div class="header">
+      <div class="team team1">
+        <div class="team-logo" id="team1Logo"></div>
+        <h2 id="team1Name">队伍1</h2>
+      </div>
+      <div class="match-info">
+        <div class="vs">VS</div>
+        <div class="match-format" id="matchFormat">BO3</div>
+      </div>
+      <div class="team team2">
+        <h2 id="team2Name">队伍2</h2>
+        <div class="team-logo" id="team2Logo"></div>
+      </div>
+    </div>
+    
+    <div class="maps-container">
+      <div class="maps-flow">
+        <div class="phase-label ban-phase">Ban 阶段</div>
+        <div id="bannedMapsContainer" class="maps-list"></div>
+        
+        <div class="phase-label pick-phase">Pick 阶段</div>
+        <div id="pickedMapsContainer" class="maps-list"></div>
+        
+        <div class="phase-label decider-phase">决胜局</div>
+        <div id="deciderMapContainer" class="decider-map"></div>
+      </div>
+    </div>
+    
+    <div id="notification" class="notification">
+      <!-- 通知区域 -->
+    </div>
+    
+    <div class="current-status">
+      <div class="current-turn" id="currentTurn">
+        <span class="status-label">当前轮到:</span>
+        <span class="status-value">等待开始</span>
+      </div>
+      <div class="current-action" id="currentAction">
+        <span class="status-label">操作:</span>
+        <span class="status-value">等待开始</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audience.js"></script>
+</body>
+</html>

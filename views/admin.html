@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2地图Ban/Pick - 管理页面</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <div class="container">
+    <h1>CS2地图Ban/Pick管理页面</h1>
+    
+    <div class="create-match">
+      <h2>创建新比赛</h2>
+      <form id="createMatchForm">
+        <div class="form-group">
+          <label for="team1Name">队伍1名称:</label>
+          <input type="text" id="team1Name" required>
+        </div>
+        <div class="form-group">
+          <label for="team1Logo">队伍1 Logo URL (可选):</label>
+          <input type="text" id="team1Logo" placeholder="https://example.com/logo1.png">
+        </div>
+        <div class="form-group">
+          <label for="team2Name">队伍2名称:</label>
+          <input type="text" id="team2Name" required>
+        </div>
+        <div class="form-group">
+          <label for="team2Logo">队伍2 Logo URL (可选):</label>
+          <input type="text" id="team2Logo" placeholder="https://example.com/logo2.png">
+        </div>
+        <div class="form-group">
+          <label for="matchFormat">比赛模式:</label>
+          <select id="matchFormat" required>
+            <option value="bo1">BO1 (Best of 1)</option>
+            <option value="bo3" selected>BO3 (Best of 3)</option>
+            <option value="bo5">BO5 (Best of 5)</option>
+          </select>
+        </div>
+        <button type="submit">创建比赛</button>
+      </form>
+    </div>
+    
+    <div class="active-matches">
+      <h2>当前活跃比赛</h2>
+      <div id="matchesList"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
