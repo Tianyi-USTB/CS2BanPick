@@ -11,6 +11,66 @@ document.addEventListener('DOMContentLoaded', function() {
   // 加载活跃比赛
   loadActiveMatches();
   
+  // 创建删除所有比赛按钮
+  const deleteAllButton = document.createElement('button');
+  deleteAllButton.innerText = '删除所有比赛';
+  deleteAllButton.className = 'delete-all-btn';
+  deleteAllButton.addEventListener('click', deleteAllMatches);
+  
+  // 将删除所有按钮添加到活跃比赛区域的标题旁边
+  const activeMatchesTitle = document.querySelector('.active-matches h2');
+  activeMatchesTitle.parentNode.insertBefore(deleteAllButton, activeMatchesTitle.nextSibling);
+  
+  // 删除所有比赛的函数
+  function deleteAllMatches() {
+    if (!confirm('确定要删除所有比赛吗？此操作不可撤销!')) {
+      return;
+    }
+    
+    fetch('/api/match', {
+      method: 'DELETE',
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('服务器响应错误');
+      }
+      return response.json();
+    })
+    .then(data => {
+      alert('所有比赛已删除');
+      loadActiveMatches();  // 重新加载空列表
+    })
+    .catch(error => {
+      console.error('删除所有比赛出错:', error);
+      alert('删除所有比赛失败，请查看控制台了解详情');
+    });
+  }
+  
+  // 删除单个比赛
+  function deleteMatch(matchId) {
+    if (!confirm('确定要删除这个比赛吗？此操作不可撤销!')) {
+      return;
+    }
+    
+    fetch(`/api/match/${matchId}`, {
+      method: 'DELETE',
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('服务器响应错误');
+      }
+      return response.json();
+    })
+    .then(data => {
+      alert('比赛已删除');
+      loadActiveMatches();  // 重新加载比赛列表
+    })
+    .catch(error => {
+      console.error('删除比赛出错:', error);
+      alert('删除比赛失败，请查看控制台了解详情');
+    });
+  }
+  
   // 创建比赛表单提交
   createMatchForm.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -83,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <div class="match-teams">${match.team1.name} vs ${match.team2.name}</div>
               <div class="match-format">${match.format.toUpperCase()}</div>
               <div class="match-status ${statusClass}">${match.status === 'completed' ? '已完成' : '进行中'}</div>
+              <button class="delete-match-btn" data-match-id="${match.id}">删除</button>
             </div>
             
             <div class="match-id">比赛ID: ${match.id}</div>
@@ -119,6 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
           `;
           
           matchesList.appendChild(matchElement);
+          
+          // 为删除按钮添加事件监听器
+          const deleteButton = matchElement.querySelector('.delete-match-btn');
+          deleteButton.addEventListener('click', function() {
+            deleteMatch(this.dataset.matchId);
+          });
         });
       })
       .catch(error => {

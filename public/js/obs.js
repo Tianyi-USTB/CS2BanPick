@@ -38,6 +38,64 @@ document.addEventListener('DOMContentLoaded', function() {
   // 预加载的图片对象存储
   const preloadedImages = {};
   
+  // 添加重连逻辑
+  let reconnectAttempts = 0;
+  const maxReconnectAttempts = 5;
+  const reconnectDelay = 3000; // 3秒
+  
+  // 处理socket断开连接
+  socket.on('disconnect', () => {
+    console.warn('与服务器连接断开，尝试重新连接...');
+    attemptReconnect();
+  });
+  
+  // 尝试重新连接
+  function attemptReconnect() {
+    if (reconnectAttempts >= maxReconnectAttempts) {
+      console.error('达到最大重连次数，停止重连');
+      showNotification('连接已断开，请刷新页面', 'error');
+      return;
+    }
+    
+    reconnectAttempts++;
+    console.log(`尝试重新连接 (${reconnectAttempts}/${maxReconnectAttempts})...`);
+    
+    // 强制重新加载比赛数据
+    setTimeout(() => {
+      socket.connect();
+      if (socket.connected) {
+        console.log('重新连接成功');
+        socket.emit('joinMatch', matchId);
+        loadMatchData(true); // 重新加载数据
+        reconnectAttempts = 0; // 重置重连计数
+      } else {
+        attemptReconnect();
+      }
+    }, reconnectDelay);
+  }
+  
+  // 数据完整性检查变量
+  let expectedMapCount = 0;
+  let displayedMapCount = 0;
+  let lastMapTimestamp = Date.now();
+  
+  // 数据完整性检查
+  function checkDataIntegrity() {
+    // 检查是否丢失了地图信息
+    if (expectedMapCount > 0 && displayedMapCount < expectedMapCount) {
+      console.warn(`数据完整性检查: 预期${expectedMapCount}张地图，但只显示了${displayedMapCount}张`);
+      // 超过30秒没有新地图，尝试重新加载
+      if (Date.now() - lastMapTimestamp > 30000) {
+        console.warn('长时间未更新，尝试重新获取比赛数据');
+        loadMatchData(true);
+        lastMapTimestamp = Date.now();
+      }
+    }
+  }
+  
+  // 定期检查数据完整性（每15秒）
+  setInterval(checkDataIntegrity, 15000);
+  
   // 预加载所有地图图片
   function preloadImages() {
     // 先获取比赛数据以获取队伍logo
@@ -183,105 +241,143 @@ document.addEventListener('DOMContentLoaded', function() {
     processPendingMaps();
   }
   
-  // 获取比赛数据
-  fetch(`/api/match/${matchId}`)
-    .then(response => response.json())
-    .then(match => {
-      team1Name = match.team1.name;
-      team1Logo = match.team1.logo || '';
-      team2Name = match.team2.name;
-      team2Logo = match.team2.logo || '';
-      
-      // 按照历史记录顺序渲染地图
-      // 确保历史记录是按照时间顺序排序的
-      const sortedHistory = [...match.history].sort((a, b) => 
-        new Date(a.timestamp) - new Date(b.timestamp)
-      );
-      
-      // 处理所有历史记录，包括ban、pick和阵营选择
-      // 使用自定义处理而不是直接渲染
-      const processedMapIds = new Set();
-      
-      // 记录每个地图的阵营信息
-      const mapSidesInfo = new Map();
-      
-      // 先处理所有的阵营选择，构建阵营信息映射
-      sortedHistory.forEach(entry => {
-        if (entry.action === 'selectSide' && entry.map) {
-          const mapId = entry.map.id;
-          if (!mapSidesInfo.has(mapId)) {
-            mapSidesInfo.set(mapId, {
-              pickedByTeam: entry.pickedByTeam,
-              side: entry.side,
-              team: entry.team
-            });
-          }
+  // 获取比赛数据，添加强制刷新参数
+  function loadMatchData(forceRefresh = false) {
+    console.log(`加载比赛数据${forceRefresh ? ' (强制刷新)' : ''}`);
+    
+    let url = `/api/match/${matchId}`;
+    if (forceRefresh) {
+      url += `?t=${Date.now()}`; // 添加时间戳防止缓存
+    }
+    
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP错误 ${response.status}`);
         }
-      });
-      
-      // 再处理地图操作
-      sortedHistory.forEach(entry => {
-        // 只处理ban和pick操作
-        if ((entry.action === 'ban' || entry.action === 'pick') && 
-            entry.map && !processedMapIds.has(entry.map.id)) {
-          if (!displayedMapIds.has(entry.map.id)) {
-            displayedMapIds.add(entry.map.id);
-            processedMapIds.add(entry.map.id);
-            
-            const sideInfo = mapSidesInfo.get(entry.map.id);
-            
-            // 如果是ban操作，直接添加到队列
-            if (entry.action === 'ban') {
-              pendingMaps.push({
-                map: entry.map,
-                action: entry.action,
+        return response.json();
+      })
+      .then(match => {
+        team1Name = match.team1.name;
+        team1Logo = match.team1.logo || '';
+        team2Name = match.team2.name;
+        team2Logo = match.team2.logo || '';
+        
+        // 计算应显示的地图总数
+        const totalBans = match.team1.bans.length + match.team2.bans.length;
+        const totalPicks = match.team1.picks.length + match.team2.picks.length;
+        expectedMapCount = totalBans + totalPicks + (match.decider ? 1 : 0);
+        
+        // 如果强制刷新，重新创建地图槽并清空显示记录
+        if (forceRefresh) {
+          currentDisplayIndex = 0;
+          displayedMapIds.clear();
+          pendingMaps.length = 0;
+          awaitingSideMaps.clear();
+          deciderMap = null;
+          createMapSlots();
+        }
+        
+        // 按照历史记录顺序渲染地图
+        // 确保历史记录是按照时间顺序排序的
+        const sortedHistory = [...match.history].sort((a, b) => 
+          new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        
+        // 处理所有历史记录，包括ban、pick和阵营选择
+        const processedMapIds = new Set();
+        
+        // 记录每个地图的阵营信息
+        const mapSidesInfo = new Map();
+        
+        // 先处理所有的阵营选择，构建阵营信息映射
+        sortedHistory.forEach(entry => {
+          if (entry.action === 'selectSide' && entry.map) {
+            const mapId = entry.map.id;
+            if (!mapSidesInfo.has(mapId)) {
+              mapSidesInfo.set(mapId, {
+                pickedByTeam: entry.pickedByTeam,
+                side: entry.side,
                 team: entry.team
               });
-            } 
-            // 如果是pick操作，检查是否有阵营信息
-            else if (entry.action === 'pick') {
-              // 如果已有阵营信息，直接添加到队列并附带阵营信息
-              if (sideInfo) {
-                entry.map.sidesInfo = sideInfo; // 保存阵营信息到地图对象
+            }
+          }
+        });
+        
+        // 再处理地图操作
+        sortedHistory.forEach(entry => {
+          // 只处理ban和pick操作
+          if ((entry.action === 'ban' || entry.action === 'pick') && 
+              entry.map && !processedMapIds.has(entry.map.id)) {
+            if (!displayedMapIds.has(entry.map.id)) {
+              displayedMapIds.add(entry.map.id);
+              processedMapIds.add(entry.map.id);
+              
+              const sideInfo = mapSidesInfo.get(entry.map.id);
+              
+              // 如果是ban操作，直接添加到队列
+              if (entry.action === 'ban') {
                 pendingMaps.push({
                   map: entry.map,
                   action: entry.action,
                   team: entry.team
                 });
-              } else {
-                // 否则缓存等待阵营选择
-                awaitingSideMaps.set(entry.map.id, {
-                  map: entry.map,
-                  action: entry.action,
-                  team: entry.team
-                });
+              } 
+              // 如果是pick操作，检查是否有阵营信息
+              else if (entry.action === 'pick') {
+                // 如果已有阵营信息，直接添加到队列并附带阵营信息
+                if (sideInfo) {
+                  entry.map.sidesInfo = sideInfo; // 保存阵营信息到地图对象
+                  pendingMaps.push({
+                    map: entry.map,
+                    action: entry.action,
+                    team: entry.team
+                  });
+                } else {
+                  // 否则缓存等待阵营选择
+                  awaitingSideMaps.set(entry.map.id, {
+                    map: entry.map,
+                    action: entry.action,
+                    team: entry.team
+                  });
+                }
               }
             }
           }
-        }
-      });
-      
-      // 开始处理地图队列
-      processPendingMaps();
-      
-      // 如果有决胜图且还没显示过，记录但不立即显示
-      if (match.decider && !displayedMapIds.has(match.decider.id)) {
-        displayedMapIds.add(match.decider.id);
-        deciderMap = match.decider;
+        });
         
-        // 如果已经显示了至少6张常规地图，才显示决胜图
-        if (currentDisplayIndex >= 5 && pendingMaps.length === 0) {
-          setTimeout(() => {
-            renderDeciderMap(match.decider);
-            deciderMap = null;
-          }, 300);
+        // 更新已显示地图数量
+        displayedMapCount = displayedMapIds.size;
+        lastMapTimestamp = Date.now();
+        
+        // 开始处理地图队列
+        processPendingMaps();
+        
+        // 如果有决胜图且还没显示过，记录但不立即显示
+        if (match.decider && !displayedMapIds.has(match.decider.id)) {
+          displayedMapIds.add(match.decider.id);
+          deciderMap = match.decider;
+          
+          // 如果已经显示了至少6张常规地图，才显示决胜图
+          if (currentDisplayIndex >= 5 && pendingMaps.length === 0) {
+            setTimeout(() => {
+              renderDeciderMap(match.decider);
+              deciderMap = null;
+            }, 300);
+          }
         }
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      showNotification('加载比赛数据出错', 'error');
-    });
+      })
+      .catch(error => {
+        console.error('获取比赛数据出错:', error);
+        showNotification('加载比赛数据出错', 'error');
+      });
+  }
+  
+  // 初始加载比赛数据
+  loadMatchData();
+  
+  // 定期刷新比赛数据（每30秒）
+  setInterval(() => loadMatchData(true), 30000);
   
   // 监听比赛更新
   socket.on('matchUpdated', (match) => {
@@ -289,6 +385,11 @@ document.addEventListener('DOMContentLoaded', function() {
     team1Logo = match.team1.logo || '';
     team2Name = match.team2.name;
     team2Logo = match.team2.logo || '';
+    
+    // 更新预期地图数量
+    const totalBans = match.team1.bans.length + match.team2.bans.length;
+    const totalPicks = match.team1.picks.length + match.team2.picks.length;
+    expectedMapCount = totalBans + totalPicks + (match.decider ? 1 : 0);
     
     // 检查是否有新的决胜图
     if (match.decider && !displayedMapIds.has(match.decider.id)) {
@@ -307,6 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.on('mapBanned', (data) => {
     if (!displayedMapIds.has(data.map.id)) {
       displayedMapIds.add(data.map.id);
+      lastMapTimestamp = Date.now();
+      displayedMapCount++;
       // 添加到队列而非直接渲染
       addMapToQueue(data.map, 'ban', data.team);
     }
@@ -316,6 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.on('mapPicked', (data) => {
     if (!displayedMapIds.has(data.map.id)) {
       displayedMapIds.add(data.map.id);
+      lastMapTimestamp = Date.now();
+      displayedMapCount++;
       // 添加到等待阵营选择的缓存
       awaitingSideMaps.set(data.map.id, {
         map: data.map,
@@ -353,6 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
       pendingMaps.push(mapData);
       awaitingSideMaps.delete(data.mapId);
       processPendingMaps();
+      lastMapTimestamp = Date.now();
     }
   });
   

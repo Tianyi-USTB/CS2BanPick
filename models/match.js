@@ -306,11 +306,35 @@ function selectSide(matchId, team, mapId, side, pickedByTeam) {
   return match;
 }
 
+// 删除比赛
+function deleteMatch(matchId) {
+  if (!activeMatches[matchId]) {
+    return { error: '比赛未找到' };
+  }
+  
+  delete activeMatches[matchId];
+  return { success: true };
+}
+
+// 删除所有比赛
+function deleteAllMatches() {
+  const count = Object.keys(activeMatches).length;
+  
+  // 清空对象
+  for (const key in activeMatches) {
+    delete activeMatches[key];
+  }
+  
+  return { success: true, count };
+}
+
 module.exports = {
   createMatch,
   getMatch,
   getActiveMatches,
   banMap,
   pickMap,
-  selectSide
+  selectSide,
+  deleteMatch,
+  deleteAllMatches
 };

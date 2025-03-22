@@ -162,3 +162,28 @@ button:hover {
   margin-right: 10px;
   font-weight: bold;
 }
+
+.delete-all-btn {
+  background-color: #d83644;
+  margin-left: 15px;
+  margin-bottom: 15px;
+}
+
+.delete-all-btn:hover {
+  background-color: #b52e3a;
+}
+
+.delete-match-btn {
+  background-color: #d83644;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.delete-match-btn:hover {
+  background-color: #b52e3a;
+}

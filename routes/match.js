@@ -6,7 +6,9 @@ const {
   getActiveMatches, 
   banMap, 
   pickMap,
-  selectSide 
+  selectSide,
+  deleteMatch,
+  deleteAllMatches
 } = require('../models/match');
 const { getAllMaps } = require('../utils/mapData');
 
@@ -117,6 +119,34 @@ router.post('/:matchId/selectSide', (req, res) => {
 // 新增：获取所有可用地图（用于预加载图片）
 router.get('/maps', (req, res) => {
   res.json(getAllMaps());
+});
+
+// 删除单个比赛
+router.delete('/:matchId', (req, res) => {
+  const { matchId } = req.params;
+  
+  // 从models/match.js导出的函数，需要在该文件中实现
+  const result = deleteMatch(matchId);
+  
+  if (result.error) {
+    return res.status(404).json(result);
+  }
+  
+  // 通过Socket.io广播比赛已删除
+  req.app.get('io').to(matchId).emit('matchDeleted', { matchId });
+  
+  res.json({ success: true, message: '比赛已删除' });
+});
+
+// 删除所有比赛
+router.delete('/', (req, res) => {
+  // 从models/match.js导出的函数，需要在该文件中实现
+  const result = deleteAllMatches();
+  
+  // 通过Socket.io广播所有比赛已删除
+  req.app.get('io').emit('allMatchesDeleted');
+  
+  res.json({ success: true, message: '所有比赛已删除', count: result.count });
 });
 
 module.exports = router;
