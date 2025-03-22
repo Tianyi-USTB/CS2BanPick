@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const notification = document.getElementById('notification');
   const preloadArea = document.getElementById('preloadArea') || document.createElement('div');
   
+  // 设置mapContainer垂直居中样式
+  mapContainer.style.position = 'absolute';
+  mapContainer.style.top = '50%';
+  mapContainer.style.transform = 'translateY(-50%)';
+  mapContainer.style.width = '100%';
+  
   // 如果preloadArea不存在，创建一个
   if (!document.getElementById('preloadArea')) {
     preloadArea.id = 'preloadArea';
