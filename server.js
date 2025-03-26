@@ -5,6 +5,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const matchRoutes = require('./routes/match');
 const { getActiveMatches } = require('./models/match');
+const connectDB = require('./config/database');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +17,9 @@ const io = require('socket.io')(server, {
   },
   transports: ['polling', 'websocket']
 });
+
+// 连接数据库
+connectDB();
 
 // 中间件
 app.use(bodyParser.json());
