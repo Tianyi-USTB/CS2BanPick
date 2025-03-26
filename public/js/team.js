@@ -5,7 +5,23 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 获取比赛ID
   const matchId = window.location.pathname.split('/').pop();
-  const socket = io();
+  
+  // 修改 Socket.IO 连接配置
+  const socket = io({
+    transports: ['polling', 'websocket'],
+    path: '/socket.io',
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+  });
+  
+  socket.on('connect_error', (error) => {
+    console.error('Socket.IO 连接错误:', error);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('Socket.IO 断开连接:', reason);
+  });
   
   // 获取DOM元素
   const teamNameElement = document.getElementById('teamName');

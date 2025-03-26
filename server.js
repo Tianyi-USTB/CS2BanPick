@@ -9,14 +9,37 @@ const connectDB = require('./config/database');
 
 const app = express();
 const server = http.createServer(app);
-//const io = socketIO(server);
+
+// 修改 Socket.IO 配置
 const io = require('socket.io')(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   },
-  transports: ['polling', 'websocket']
+  // 添加配置以支持 Vercel
+  transports: ['polling', 'websocket'],
+  allowEIO3: true,
+  path: '/socket.io'
 });
+
+// 为 Vercel 环境添加特殊处理
+if (process.env.VERCEL) {
+  console.log('Running on Vercel...');
+  
+  // 添加健康检查路由
+  app.get('/health', (req, res) => {
+    res.send('OK');
+  });
+  
+  // 允许 Vercel 的请求头
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });
+}
 
 // 连接数据库
 connectDB();
@@ -83,8 +106,14 @@ io.on('connection', (socket) => {
   });
 });
 
-// 启动服务器
+// 修改服务器启动方式
 const PORT = process.env.PORT || 7355;
-server.listen(PORT, () => {
-  console.log(`服务器运行在 http://localhost:${PORT}`);
-});
+if (process.env.VERCEL) {
+  // Vercel 环境下不需要显式监听端口
+  module.exports = app;
+} else {
+  // 本地开发环境
+  server.listen(PORT, () => {
+    console.log(`服务器运行在 http://localhost:${PORT}`);
+  });
+};
