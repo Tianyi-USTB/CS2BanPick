@@ -8,7 +8,14 @@ const { getActiveMatches } = require('./models/match');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+//const io = socketIO(server);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+  transports: ['polling', 'websocket']
+});
 
 // 中间件
 app.use(bodyParser.json());
